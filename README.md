@@ -14,6 +14,9 @@ For Windows
 # Output:
 Screenshots during development:\
 
+Visualizing Normals\
+![](img/visualizingNormals.png)
+
 First Sphere\
 ![](img/firstSphere.png)
 
