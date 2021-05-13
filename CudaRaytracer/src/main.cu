@@ -47,9 +47,10 @@ void CheckCuda(cudaError_t result, const char* func, const char* filepath, const
 int32_t InitCudaDevice();
 void InitCudaTexture(uint32_t textureID);
 
-// ---------Render-----------------------------------------
+// ---------Raytracer--------------------------------------
 __global__ void Kernel(cudaSurfaceObject_t surfaceObj, vec3 origin, vec3 lowerLeftCorner, vec3 horizontal, vec3 vertical);
 __device__ vec3 RayColor(const Ray& ray);
+__device__ bool HitSphere(const vec3& center, float radius, const Ray& ray);
 
 
 int main(int argc, char** argv)
@@ -118,7 +119,7 @@ GLFWwindow* InitWindow()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// Create a windowed mode window and its OpenGL context
-	GLFWwindow* window = glfwCreateWindow(width, height, "CudaRayTracer", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(width, height, "CudaRaytracer", nullptr, nullptr);
 	if (!window)
 	{
 		std::cerr << "ERROR: Failed to create GLFW window" << std::endl;
@@ -343,7 +344,7 @@ void InitCudaTexture(uint32_t textureID)
 }
 
 
-// ---------Render-----------------------------------------
+// ---------Raytracer--------------------------------------
 __global__ void Kernel(cudaSurfaceObject_t surfaceObj, vec3 origin, vec3 lowerLeftCorner, vec3 horizontal, vec3 vertical)
 {
 	int32_t x = threadIdx.x + blockDim.x * blockIdx.x;
@@ -367,7 +368,22 @@ __global__ void Kernel(cudaSurfaceObject_t surfaceObj, vec3 origin, vec3 lowerLe
 
 __device__ vec3 RayColor(const Ray& ray)
 {
+	if (HitSphere(vec3(0.0f, 0.0f, -2.0f), 1.0f, ray))
+		return vec3(1.0f, 0.0f, 0.0f);
+
 	vec3 dir = ray.GetDirection();      // Direction of ray is a unit vector
 	float t  = 0.5f * (dir.y() + 1.0f); // Mapping y in the range [0, 1]
 	return (1.0f - t) * vec3(1.0f, 1.0f, 1.0f) + t * vec3(0.5f, 0.7f, 1.0f); // Blend the background from blue to white vertically
 }
+
+__device__ bool HitSphere(const vec3& center, float radius, const Ray& ray)
+{
+	vec3 oc = ray.GetOrigin() - center;
+	float a = Dot(ray.GetDirection(), ray.GetDirection());
+	float b = 2.0f * Dot(ray.GetDirection(), oc);
+	float c = Dot(oc, oc) - radius * radius;
+	float dis = b * b - 4.0f * a * c; // discriminant
+
+	return (dis > 0.0f);
+}
+

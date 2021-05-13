@@ -13,6 +13,10 @@ For Windows
 
 # Output:
 Screenshots during development:\
+
+First Sphere\
+![](img/firstSphere.png)
+
 Gradient Sky\
 ![](img/gradientSky.png)
 
