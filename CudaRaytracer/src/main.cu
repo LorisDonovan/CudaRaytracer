@@ -12,6 +12,7 @@
 
 #include "vec3.h"
 #include "ray.h"
+#include "timer.h"
 
 #define cudaCheckErrors(val) CheckCuda(val, #val, __FILE__, __LINE__)
 
@@ -81,13 +82,16 @@ int main(int argc, char** argv)
 	dim3 blocks((width + numThreads - 1) / numThreads, (height + numThreads - 1) / numThreads);
 	dim3 threads(numThreads, numThreads);
 
-	// CUDA register and create surface object resource
-	cudaCheckErrors(cudaGraphicsMapResources(1, &textureResource));
-	cudaCheckErrors(cudaGraphicsSubResourceGetMappedArray(&textureArray, textureResource, 0, 0));
-	resourceDesc.res.array.array = textureArray;
-	cudaCheckErrors(cudaCreateSurfaceObject(&surfaceObj, &resourceDesc));
-	Kernel<<<blocks, threads>>>(surfaceObj, origin, lowerLeftCorner, horizontal, vertical);
-	cudaCheckErrors(cudaGraphicsUnmapResources(1, &textureResource)); // sync cuda operations before graphics calls
+	{
+		Timer t;
+		// CUDA register and create surface object resource
+		cudaCheckErrors(cudaGraphicsMapResources(1, &textureResource));
+		cudaCheckErrors(cudaGraphicsSubResourceGetMappedArray(&textureArray, textureResource, 0, 0));
+		resourceDesc.res.array.array = textureArray;
+		cudaCheckErrors(cudaCreateSurfaceObject(&surfaceObj, &resourceDesc));
+		Kernel<<<blocks, threads>>>(surfaceObj, origin, lowerLeftCorner, horizontal, vertical);
+		cudaCheckErrors(cudaGraphicsUnmapResources(1, &textureResource)); // sync cuda operations before graphics calls
+	}
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -371,7 +375,7 @@ __device__ vec3 RayColor(const Ray& ray)
 	float t = HitSphere(vec3(0.0f, 0.0f, -2.0f), 1.0f, ray);
 	if (t > 0.0f) // 2 real solutions of sphere equation // ray intersects at 2 points // front and back
 	{
-		vec3 normal = UnitVector(ray.At(t) - vec3(0.0f, 0.0f, -2.0f));      // Normal = P(t) - C // range [-1, 1]
+		vec3 normal = UnitVector(ray.At(t) - vec3(0.0f, 0.0f, -2.0f));      // Normal = P(t) - Center // range [-1, 1]
 		return 0.5f * vec3(normal.x() + 1, normal.y() + 1, normal.z() + 1); // Mapping to [0, 1]
 	}
 
@@ -388,7 +392,7 @@ __device__ float HitSphere(const vec3& center, float radius, const Ray& ray)
 	float c   = Dot(oc, oc) - radius * radius;
 	float dis = b * b - 4.0f * a * c; // discriminant
 
-	if (dis < 0.0f)
+	if (dis < 0.0f) // Ray is not intersecting with the sphere
 		return -1.0f;
 
 	return (-b - std::sqrt(dis)) / (2.0f * a); // Solution for t in sphere equation // quadratic equation

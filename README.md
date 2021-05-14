@@ -12,7 +12,7 @@ For Windows
 * Then build and run the project
 
 # Output:
-Screenshots during development:\
+Screenshots during development:
 
 Visualizing Normals\
 ![](img/visualizingNormals.png)
