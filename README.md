@@ -14,6 +14,9 @@ For Windows
 # Output:
 Screenshots during development:
 
+Normal-colored Sphere with Ground\
+![](img/normalSphereWithGround.png)
+
 Visualizing Normals\
 ![](img/visualizingNormals.png)
 

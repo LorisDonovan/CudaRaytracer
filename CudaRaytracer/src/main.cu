@@ -11,6 +11,7 @@
 
 #include "render/ray.h"
 #include "render/hittable.h"
+#include "render/hittableList.h"
 #include "render/sphere.h"
 
 #include "utils/vec3.h"
@@ -25,8 +26,8 @@ const  uint32_t width  = static_cast<uint32_t>(height * aspectRatio);
 
 
 // ----------Raytracer-------------------------------------
-__global__ void CreateWorld(Hittable** hittable);
-__global__ void FreeWorld(Hittable** hittable);
+__global__ void CreateWorld(Hittable** list, Hittable** world);
+__global__ void FreeWorld(Hittable** list, Hittable** world);
 __global__ void Render(cudaSurfaceObject_t surfaceObj, Hittable** hittable, vec3 origin, vec3 lowerLeftCorner, vec3 horizontal, vec3 vertical);
 __device__ vec3 RayColor(const Ray& ray, Hittable** hittable);
 
@@ -45,7 +46,7 @@ int main(int argc, char** argv)
 	float viewportWidth  = aspectRatio * viewportHeight;
 	vec3  origin(0.0f, 0.0f, 0.0f);
 	vec3  horizontal(viewportWidth, 0.0f, 0.0f);
-	vec3  vertical(0.0f, viewportHeight, 0.0f);
+	vec3  vertical(0.0f, viewportHeight,  0.0f);
 	vec3  lowerLeftCorner = origin - horizontal * 0.5f - vertical * 0.5f - vec3(0.0f, 0.0f, focalLength);
 
 	// Initialize opengl and cuda interop
@@ -61,9 +62,11 @@ int main(int argc, char** argv)
 	InitCudaTexture(textureResource, resourceDesc, textureID);
 
 	// Create Scene objects
-	Hittable** d_Hittable;
-	cudaCheckErrors(cudaMalloc((void**)&d_Hittable, sizeof(Hittable*)));
-	CreateWorld<<<1, 1>>>(d_Hittable);
+	Hittable** d_List;
+	cudaCheckErrors(cudaMalloc((void**)&d_List, 2 * sizeof(Hittable*)));
+	Hittable** d_World;
+	cudaCheckErrors(cudaMalloc((void**)&d_World, sizeof(Hittable*)));
+	CreateWorld<<<1, 1>>>(d_List, d_World);
 	cudaCheckErrors(cudaGetLastError());
 	cudaCheckErrors(cudaDeviceSynchronize());
 
@@ -79,7 +82,7 @@ int main(int argc, char** argv)
 		cudaCheckErrors(cudaGraphicsSubResourceGetMappedArray(&textureArray, textureResource, 0, 0));
 		resourceDesc.res.array.array = textureArray;
 		cudaCheckErrors(cudaCreateSurfaceObject(&surfaceObj, &resourceDesc));
-		Render<<<blocks, threads>>>(surfaceObj, d_Hittable, origin, lowerLeftCorner, horizontal, vertical);
+		Render<<<blocks, threads>>>(surfaceObj, d_World, origin, lowerLeftCorner, horizontal, vertical);
 		cudaCheckErrors(cudaGraphicsUnmapResources(1, &textureResource)); // sync cuda operations before graphics calls
 		cudaCheckErrors(cudaGetLastError());
 		cudaCheckErrors(cudaDeviceSynchronize());
@@ -100,10 +103,11 @@ int main(int argc, char** argv)
 	}
 
 	// Cleanup
-	FreeWorld<<<1, 1>>>(d_Hittable);
+	FreeWorld<<<1, 1>>>(d_List, d_World);
 	cudaCheckErrors(cudaGetLastError());
 
-	cudaCheckErrors(cudaFree(d_Hittable));
+	cudaCheckErrors(cudaFree(d_List));
+	cudaCheckErrors(cudaFree(d_World));
 	Cleanup(quadVA, quadVB, textureID, shaderID);
 	glfwTerminate();
 	return 0;
@@ -111,20 +115,24 @@ int main(int argc, char** argv)
 
 
 // ----------Raytracer-------------------------------------
-__global__ void CreateWorld(Hittable** hittable)
+__global__ void CreateWorld(Hittable** list, Hittable** world)
 {
 	if (threadIdx.x == 0 && blockIdx.x == 0)
 	{
-		*hittable = new Sphere(vec3(0.0f, 0.0f, -2.0f), 1.0f);
+		list[0] = new Sphere(vec3(0.0f,    0.0f, -1.0f),   0.5f);
+		list[1] = new Sphere(vec3(0.0f, -100.5f, -1.0f), 100.0f);
+		*world  = new HittableList(list, 2);
 	}
 }
 
-__global__ void FreeWorld(Hittable** hittable)
+__global__ void FreeWorld(Hittable** list, Hittable** world)
 {
-	delete* hittable;
+	delete list[0];
+	delete list[1];
+	delete *world;
 }
 
-__global__ void Render(cudaSurfaceObject_t surfaceObj, Hittable** hittable, 
+__global__ void Render(cudaSurfaceObject_t surfaceObj, Hittable** world, 
 	vec3 origin, vec3 lowerLeftCorner, vec3 horizontal, vec3 vertical)
 {
 	int32_t x = threadIdx.x + blockDim.x * blockIdx.x;
@@ -138,7 +146,7 @@ __global__ void Render(cudaSurfaceObject_t surfaceObj, Hittable** hittable,
 	float v    = float(y) / float(height);
 	// Calculate color
 	Ray ray(origin, lowerLeftCorner + u * horizontal + v * vertical - origin);
-	vec3 color = RayColor(ray, hittable);
+	vec3 color = RayColor(ray, world);
 	uint8_t r  = uint8_t(color.r() * 255);
 	uint8_t g  = uint8_t(color.g() * 255);
 	uint8_t b  = uint8_t(color.b() * 255);
@@ -147,10 +155,10 @@ __global__ void Render(cudaSurfaceObject_t surfaceObj, Hittable** hittable,
 	surf2Dwrite(data, surfaceObj, x * sizeof(uchar4), y);
 }
 
-__device__ vec3 RayColor(const Ray& ray, Hittable** hittable)
+__device__ vec3 RayColor(const Ray& ray, Hittable** world)
 {
 	HitRecords rec;
-	if ((*hittable)->Hit(ray, 0.001f, inf, rec))
+	if ((*world)->Hit(ray, 0.001f, inf, rec))
 		return 0.5f * vec3(rec.Normal + vec3(1.0f, 1.0f, 1.0f)); // Mapping to [0, 1]
 
 	vec3 dir = ray.GetDirection();        // Direction of ray is a unit vector
