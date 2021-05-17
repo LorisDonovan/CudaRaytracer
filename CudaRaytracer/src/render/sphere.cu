@@ -14,16 +14,17 @@ __device__ bool Sphere::Hit(const Ray& ray, float tMin, float tMax, HitRecords& 
 
 	// Only take the nearest root that lies in the acceptable range (tMin, tMax)
 	float sqrtd = std::sqrt(dis);
-	float root = (-b - sqrtd) / a; // Solution for t in sphere equation // quadratic equation
+	float root  = (-b - sqrtd) / a; // Solution for t in sphere equation // quadratic equation
 	if (root < tMin || root > tMax)
 	{
 		float root = (-b + sqrtd) / a;
 		if (root < tMin || root > tMax)
 			return false;
 	}
-	rec.t = root;
-	rec.Point = ray.PointAt(rec.t);
-	rec.Normal = (rec.Point - m_Center) / m_Radius;
+	rec.t        = root;
+	rec.Point    = ray.PointAt(rec.t);
+	rec.Normal   = (rec.Point - m_Center) / m_Radius;
+	rec.Material = m_Material;
 
 	return true;
 }

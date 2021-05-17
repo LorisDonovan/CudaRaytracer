@@ -1,16 +1,5 @@
 #include "utils.h"
 
-__device__ vec3 RandomInUnitSphere(curandState* localRandState)
-{
-	vec3 p;
-	do 
-	{
-		p = 2.0f * vec3(curand_uniform(localRandState), curand_uniform(localRandState), curand_uniform(localRandState)) 
-			- vec3(1.0f, 1.0f, 1.0f); // in the range of [-1, 1]
-	} while (p.LengthSquared() >= 1.0f);
-
-	return p;
-}
 
 void CheckCuda(cudaError_t result, const char* func, const char* filepath, const uint32_t line)
 {

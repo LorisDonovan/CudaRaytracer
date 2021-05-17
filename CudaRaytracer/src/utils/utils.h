@@ -23,8 +23,6 @@ __device__ inline float DegreesToRadian(float degrees)
 	return degrees * pi / 180.0f;
 }
 
-__device__ vec3 RandomInUnitSphere(curandState* localRandState);
-
 void    CheckCuda(cudaError_t result, const char* func, const char* filepath, const uint32_t line);
 int32_t InitCudaDevice();
 void    InitCudaTexture(cudaGraphicsResource_t& textureResource, cudaResourceDesc& resourceDesc, uint32_t textureID);
