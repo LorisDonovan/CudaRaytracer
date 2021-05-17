@@ -21,11 +21,14 @@
 #include "utils/utils.h"
 
 
-// Settings
-constexpr int32_t numSamples = 32;
+// ----------Settings--------------------------------------
+constexpr int32_t numThreadsX = 32;
+constexpr int32_t numThreadsY = 32;
+constexpr int32_t numSamples  = 16;
+// Window settings
 constexpr float aspectRatio = 16.0f / 9.0f;
-const  uint32_t height = 540;
-const  uint32_t width  = static_cast<uint32_t>(height * aspectRatio);
+constexpr uint32_t height   = 540;
+constexpr uint32_t width    = static_cast<uint32_t>(height * aspectRatio);
 
 
 // ----------Raytracer-------------------------------------
@@ -33,7 +36,7 @@ __device__ vec3 RayColor(const Ray& ray, Hittable** hittable);
 __global__ void RenderInit(curandState* randState);
 __global__ void Render(cudaSurfaceObject_t surfaceObj, Hittable** world, Camera** cam, curandState* randState);
 __global__ void CreateWorld(Camera** cam, Hittable** list, Hittable** world);
-__global__ void FreeWorld(Camera** cam, Hittable** list, Hittable** world);
+__global__ void FreeWorld(Camera** cam, Hittable** list, Hittable** world, const int32_t numObj);
 
 
 int main(int argc, char** argv)
@@ -57,10 +60,11 @@ int main(int argc, char** argv)
 	InitCudaTexture(textureResource, resourceDesc, textureID);
 	
 	// Create Scene objects
+	const int32_t numObj = 2;
 	Camera** d_Cam;
 	cudaCheckErrors(cudaMalloc((void**)&d_Cam, sizeof(Camera*)));
 	Hittable** d_List;
-	cudaCheckErrors(cudaMalloc((void**)&d_List, 2 * sizeof(Hittable*)));
+	cudaCheckErrors(cudaMalloc((void**)&d_List, numObj * sizeof(Hittable*)));
 	Hittable** d_World;
 	cudaCheckErrors(cudaMalloc((void**)&d_World, sizeof(Hittable*)));
 	CreateWorld<<<1, 1>>>(d_Cam, d_List, d_World);
@@ -68,13 +72,18 @@ int main(int argc, char** argv)
 	cudaCheckErrors(cudaDeviceSynchronize());
 
 	// CUDA kernel thread layout
-	int32_t numThreads = 32;
-	dim3 blocks((width + numThreads - 1) / numThreads, (height + numThreads - 1) / numThreads);
-	dim3 threads(numThreads, numThreads);
+	dim3 blocks((width + numThreadsX - 1) / numThreadsX, (height + numThreadsY - 1) / numThreadsY);
+	dim3 threads(numThreadsX, numThreadsY);
 
+	std::cout << "Rendering info:\n"
+			  << "    Image Resolution: " << width       << "x" << height     << "\n"
+			  << "    Thread dimension: " << numThreadsX << "x" << numThreadsY << "\n"
+			  << "    Render samples  : " << numSamples << std::endl;
+	
 	// Initialize random numbers for Rendering
 	curandState* d_RandState;
 	{
+		std::cout << "RenderInit: ";
 		Timer t;
 		cudaCheckErrors(cudaMalloc((void**)&d_RandState, width * height * sizeof(curandState)));
 		RenderInit<<<blocks, threads>>>(d_RandState);
@@ -83,6 +92,7 @@ int main(int argc, char** argv)
 	}
 	// Call Render function
 	{
+		std::cout << "Renderer   :";
 		Timer t; // Starts a timer when created and stops when destroyed
 		// CUDA register and create surface object resource
 		cudaCheckErrors(cudaGraphicsMapResources(1, &textureResource));
@@ -110,7 +120,7 @@ int main(int argc, char** argv)
 	}
 
 	// Cleanup
-	FreeWorld<<<1, 1>>>(d_Cam, d_List, d_World);
+	FreeWorld<<<1, 1>>>(d_Cam, d_List, d_World, numObj);
 	cudaCheckErrors(cudaGetLastError());
 
 	cudaCheckErrors(cudaFree(d_List));
@@ -152,14 +162,14 @@ __global__ void Render(cudaSurfaceObject_t surfaceObj, Hittable** world, Camera*
 		// Offset values to move the ray across the screen
 		float u = float(x + curand_uniform(&localRandState)) / float(width);
 		float v = float(y + curand_uniform(&localRandState)) / float(height);
-		color  += RayColor((*cam)->GetRay(u, v), world);
+		color += RayColor((*cam)->GetRay(u, v), world);
 	}
 	
 	// Calculate color
-	color     /= float(numSamples);
-	uint8_t r  = uint8_t(color.r() * 255);
-	uint8_t g  = uint8_t(color.g() * 255);
-	uint8_t b  = uint8_t(color.b() * 255);
+	color /= float(numSamples);
+	uint8_t r = uint8_t(color.r() * 255);
+	uint8_t g = uint8_t(color.g() * 255);
+	uint8_t b = uint8_t(color.b() * 255);
 
 	uchar4 data = make_uchar4(r, g, b, 255);
 	surf2Dwrite(data, surfaceObj, x * sizeof(uchar4), y);
@@ -180,19 +190,20 @@ __global__ void CreateWorld(Camera** cam, Hittable** list, Hittable** world)
 {
 	if (threadIdx.x == 0 && blockIdx.x == 0)
 	{
-		list[0] = new Sphere(vec3(0.0f, 0.0f, -1.0f), 0.5f);
+		list[0] = new Sphere(vec3(0.0f,    0.0f, -1.0f),   0.5f);
 		list[1] = new Sphere(vec3(0.0f, -100.5f, -1.0f), 100.0f);
-		*world = new HittableList(list, 2);
-		*cam = new Camera(aspectRatio);
+		*world  = new HittableList(list, 2);
+		*cam    = new Camera(aspectRatio);
 	}
 }
 
-__global__ void FreeWorld(Camera** cam, Hittable** list, Hittable** world)
+__global__ void FreeWorld(Camera** cam, Hittable** list, Hittable** world, const int32_t numObj)
 {
-	delete list[0];
-	delete list[1];
-	delete* world;
-	delete* cam;
+	for (int i = 0; i < numObj; i++)
+		delete list[i];
+
+	delete *world;
+	delete *cam;
 }
 
 
