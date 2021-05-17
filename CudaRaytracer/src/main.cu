@@ -167,6 +167,7 @@ __global__ void Render(cudaSurfaceObject_t surfaceObj, Hittable** world, Camera*
 	
 	// Calculate color
 	color /= float(numSamples);
+	// Gamma correction
 	uint8_t r = uint8_t(std::sqrt(color.r()) * 255);
 	uint8_t g = uint8_t(std::sqrt(color.g()) * 255);
 	uint8_t b = uint8_t(std::sqrt(color.b()) * 255);
@@ -177,20 +178,27 @@ __global__ void Render(cudaSurfaceObject_t surfaceObj, Hittable** world, Camera*
 
 __device__ vec3 RayColor(const Ray& ray, Hittable** world, curandState* localRandState, const int32_t depth)
 {
-	HitRecords rec;
-
-	if (depth <= 0)
-		return vec3(0.0f, 0.01f, 0.0f);
-
-	if ((*world)->Hit(ray, 0.001f, inf, rec))
+	Ray curRay = ray;
+	float attenuation = 1.0f;
+	for (int i = 0; i < depth; i++)
 	{
-		vec3 target = rec.Point + rec.Normal + RandomInUnitSphere(localRandState);
-		return 0.5f * RayColor(Ray(rec.Point, target - rec.Point), world, localRandState, depth - 1);
+		HitRecords rec;
+		if ((*world)->Hit(curRay, 0.001f, inf, rec))
+		{
+			vec3 target = rec.Point + rec.Normal + RandomInUnitSphere(localRandState);
+			curRay = Ray(rec.Point, target - rec.Point);
+			attenuation *= 0.5f;
+		}
+		else
+		{
+			vec3 dir = ray.GetDirection();        // Direction of ray is a unit vector
+			float t = 0.5f * (dir.y() + 1.0f);   // Mapping y in the range [0, 1]
+			vec3 c = (1.0f - t) * vec3(1.0f, 1.0f, 1.0f) + t * vec3(0.5f, 0.7f, 1.0f); // Blend the background from blue to white vertically
+			return attenuation * c;
+		}
 	}
 
-	vec3 dir = ray.GetDirection();        // Direction of ray is a unit vector
-	float t  = 0.5f * (dir.y() + 1.0f);   // Mapping y in the range [0, 1]
-	return (1.0f - t) * vec3(1.0f, 1.0f, 1.0f) + t * vec3(0.5f, 0.7f, 1.0f); // Blend the background from blue to white vertically
+	return vec3(0.0f, 0.0f, 0.0f);
 }
 
 __global__ void CreateWorld(Camera** cam, Hittable** list, Hittable** world)
