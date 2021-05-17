@@ -5,11 +5,18 @@
 #include <iostream>
 #include <cmath>
 
+struct rgb
+{
+	float Red, Green, Blue;
+	__host__ __device__ rgb(float r, float g, float b) : Red(r), Green(g), Blue(b) {}
+};
+
 class vec3
 {
 public:
 	__host__ __device__ vec3() : e{ 0.0f, 0.0f, 0.0f } {}
 	__host__ __device__ vec3(float e0, float e1, float e2) : e{ e0, e1, e2 } {}
+	__host__ __device__ vec3(const rgb& color) : e{ color.Red / 255.0f, color.Green / 255.0f, color.Blue / 255.0f } {}
 
 	__host__ __device__ inline float x() const { return e[0]; }
 	__host__ __device__ inline float y() const { return e[1]; }

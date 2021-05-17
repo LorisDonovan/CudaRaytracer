@@ -40,7 +40,7 @@ __global__ void Render(cudaSurfaceObject_t surfaceObj, Hittable** world, Camera*
 		// Offset values to move the ray across the screen
 		float u = float(x + curand_uniform(&localRandState)) / float(width);
 		float v = float(y + curand_uniform(&localRandState)) / float(height);
-		color += RayColor((*cam)->GetRay(u, v), world, &localRandState, 50);
+		color += RayColor((*cam)->GetRay(u, v, &localRandState), world, &localRandState, 50);
 	}
 	
 	// Calculate color
@@ -89,10 +89,20 @@ __global__ void CreateWorld(Camera** cam, Hittable** list, Hittable** world, con
 {
 	if (threadIdx.x == 0 && blockIdx.x == 0)
 	{
-		list[0] = new Sphere(vec3(0.0f,    0.0f, -1.0f),   0.5f, new Lambertian(vec3(0.5f, 0.5f, 0.5f)));
-		list[1] = new Sphere(vec3(0.0f, -100.5f, -1.0f), 100.0f, new Lambertian(vec3(0.5f, 0.5f, 0.5f)));
+		list[0] = new Sphere(vec3( 0.0f,    0.0f, -1.0f),   0.5f, new Lambertian(vec3(rgb(242, 200, 202))));
+		list[1] = new Sphere(vec3( 1.0f,    0.0f, -1.0f),   0.5f, new Lambertian(vec3(rgb( 67,  67,  67))));
+		list[2] = new Sphere(vec3(-1.0f,    0.0f, -1.0f),   0.5f, new Lambertian(vec3(rgb( 50,  72,  93))));
+		list[3] = new Sphere(vec3( 0.0f, -100.5f, -1.0f), 100.0f, new Lambertian(vec3(rgb(191, 201, 141))));
 		*world  = new HittableList(list, numObj);
-		*cam    = new Camera(aspectRatio);
+		// camera settings
+		vec3 lookFrom(3.0f, 3.0f, 2.0f);
+		vec3 lookAt(0.0f, 0.0f, -1.0f);
+		vec3 vUp(0.0f, 1.0f, 0.0f);
+		float focusDist = (lookFrom - lookAt).Length();
+		float aperture  = 2.0f;
+		float vFov = 30.0f;
+
+		*cam    = new Camera(lookFrom, lookAt, vUp, focusDist, aperture, vFov, aspectRatio);
 	}
 }
 

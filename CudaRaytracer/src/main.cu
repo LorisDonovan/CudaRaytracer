@@ -53,7 +53,7 @@ int main(int argc, char** argv)
 	InitCudaTexture(textureResource, resourceDesc, textureID);
 	
 	// Create Scene objects
-	const int32_t numObj = 2;
+	const int32_t numObj = 4;
 	Camera** d_Cam;
 	cudaCheckErrors(cudaMalloc((void**)&d_Cam, sizeof(Camera*)));
 	Hittable** d_List;

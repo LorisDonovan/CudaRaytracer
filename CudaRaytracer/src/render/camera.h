@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cuda_runtime.h>
+#include <curand_kernel.h>
 #include <device_launch_parameters.h>
 
 #include "utils/vec3.h"
@@ -10,26 +11,17 @@
 class Camera
 {
 public:
-	__device__ Camera(float aspectRatio = 16.0f/9.0f)
-		:m_Origin(0.0f, 0.0f, 0.0f)
-	{
-		float focalLength    = 1.0f;
-		float viewportHeight = 2.0f;
-		float viewportWidth  = aspectRatio * viewportHeight;
+	__device__ Camera(vec3 lookFrom, vec3 lookAt, vec3 vUp, const float focusDist, const float aperture,
+		const float vFov = 60.0f, const float aspectRatio = 16.0f / 9.0f);
 
-		m_Horizontal      = vec3(viewportWidth, 0.0f, 0.0f);
-		m_Vertical        = vec3(0.0f, viewportHeight, 0.0f);
-		m_LowerLeftCorner = m_Origin - m_Horizontal * 0.5f - m_Vertical * 0.5f - vec3(0.0f, 0.0f, focalLength);
-	}
-
-	__device__ inline Ray GetRay(float u, float v) const
-	{
-		return Ray(m_Origin, m_LowerLeftCorner + u * m_Horizontal + v * m_Vertical - m_Origin);
-	}
+	__device__ Ray GetRay(float u, float v, curandState* localRandState) const;
 
 private:
 	vec3 m_Origin;
 	vec3 m_Horizontal;
 	vec3 m_Vertical;
-	vec3 m_LowerLeftCorner;
+	vec3 m_LowerLeft; // lower left corner
+
+	float m_LensRadius;
+	vec3 m_W, m_U, m_V;
 };

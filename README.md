@@ -25,6 +25,9 @@ For Windows
 This project was built and run on Intel i5-9300H cpu and Nvidia GTX 1050 gpu.\
 Screenshots during development:
 
+Positionable Camera with Defocus Blur (Only diffuse materials) (Render samples = 256, apperture = 2.0, vFOV = 30)\
+![](img/positionableCamWithDefocusBlur.png)
+
 Diffuse Material (Render samples = 256)\
 ![](img/diffuseMat.png)
 
