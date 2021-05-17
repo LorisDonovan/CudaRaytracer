@@ -24,7 +24,7 @@
 // ----------Settings--------------------------------------
 constexpr int32_t numThreadsX = 32;
 constexpr int32_t numThreadsY = 32;
-constexpr int32_t numSamples  = 16;
+constexpr int32_t numSamples  = 256;
 // Window settings
 constexpr float aspectRatio = 16.0f / 9.0f;
 constexpr uint32_t height   = 540;
@@ -32,7 +32,7 @@ constexpr uint32_t width    = static_cast<uint32_t>(height * aspectRatio);
 
 
 // ----------Raytracer-------------------------------------
-__device__ vec3 RayColor(const Ray& ray, Hittable** hittable);
+__device__ vec3 RayColor(const Ray& ray, Hittable** hittable, curandState* localRandState, const int32_t depth = 50);
 __global__ void RenderInit(curandState* randState);
 __global__ void Render(cudaSurfaceObject_t surfaceObj, Hittable** world, Camera** cam, curandState* randState);
 __global__ void CreateWorld(Camera** cam, Hittable** list, Hittable** world);
@@ -162,24 +162,31 @@ __global__ void Render(cudaSurfaceObject_t surfaceObj, Hittable** world, Camera*
 		// Offset values to move the ray across the screen
 		float u = float(x + curand_uniform(&localRandState)) / float(width);
 		float v = float(y + curand_uniform(&localRandState)) / float(height);
-		color += RayColor((*cam)->GetRay(u, v), world);
+		color += RayColor((*cam)->GetRay(u, v), world, &localRandState, 50);
 	}
 	
 	// Calculate color
 	color /= float(numSamples);
-	uint8_t r = uint8_t(color.r() * 255);
-	uint8_t g = uint8_t(color.g() * 255);
-	uint8_t b = uint8_t(color.b() * 255);
+	uint8_t r = uint8_t(std::sqrt(color.r()) * 255);
+	uint8_t g = uint8_t(std::sqrt(color.g()) * 255);
+	uint8_t b = uint8_t(std::sqrt(color.b()) * 255);
 
 	uchar4 data = make_uchar4(r, g, b, 255);
 	surf2Dwrite(data, surfaceObj, x * sizeof(uchar4), y);
 }
 
-__device__ vec3 RayColor(const Ray& ray, Hittable** world)
+__device__ vec3 RayColor(const Ray& ray, Hittable** world, curandState* localRandState, const int32_t depth)
 {
 	HitRecords rec;
+
+	if (depth <= 0)
+		return vec3(0.0f, 0.01f, 0.0f);
+
 	if ((*world)->Hit(ray, 0.001f, inf, rec))
-		return 0.5f * vec3(rec.Normal + vec3(1.0f, 1.0f, 1.0f)); // Mapping to [0, 1]
+	{
+		vec3 target = rec.Point + rec.Normal + RandomInUnitSphere(localRandState);
+		return 0.5f * RayColor(Ray(rec.Point, target - rec.Point), world, localRandState, depth - 1);
+	}
 
 	vec3 dir = ray.GetDirection();        // Direction of ray is a unit vector
 	float t  = 0.5f * (dir.y() + 1.0f);   // Mapping y in the range [0, 1]
