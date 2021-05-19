@@ -17,15 +17,16 @@ __device__ bool Sphere::Hit(const Ray& ray, float tMin, float tMax, HitRecords& 
 	float root  = (-b - sqrtd) / a; // Solution for t in sphere equation // quadratic equation
 	if (root < tMin || root > tMax)
 	{
-		float root = (-b + sqrtd) / a;
+		root = (-b + sqrtd) / a;
 		if (root < tMin || root > tMax)
 			return false;
 	}
+
 	rec.t        = root;
 	rec.Point    = ray.PointAt(rec.t);
-	rec.Normal   = (rec.Point - m_Center) / m_Radius;
 	rec.Material = m_Material;
+	vec3 outwardNormal = (rec.Point - m_Center) / m_Radius;
+	rec.SetFrontNormal(ray, outwardNormal);
 
 	return true;
 }
-
