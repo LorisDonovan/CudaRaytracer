@@ -163,4 +163,3 @@ __host__ __device__ inline void vec3::MakeUnitVector()
 	e[1] *= v;
 	e[2] *= v;
 }
-
