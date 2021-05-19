@@ -17,7 +17,7 @@ For Windows
 * In Visual Studio,
 	* in Project properties>CUDA C/C++>Common
 		* set ```Generate Relocatable Device Code``` to ```yes```
-		* set ```Target Machine Platform``` to ```x64```
+		* set ```Target Machine Platform``` to ```64-bit```
 	* you might also have to exclude all .cu files and include them again and refresh the solution explorer (because vs2019 starts to compile with MSVC instead of NVCC initially)
 * Then build and run the project
 

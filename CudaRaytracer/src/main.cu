@@ -28,7 +28,7 @@ constexpr int32_t numThreadsY = 16;
 constexpr int32_t numSamples  = 1024;
 // Window settings
 constexpr float aspectRatio = 16.0f / 9.0f;
-constexpr uint32_t height   = 540;
+constexpr uint32_t height   = 512;
 constexpr uint32_t width    = static_cast<uint32_t>(height * aspectRatio);
 
 

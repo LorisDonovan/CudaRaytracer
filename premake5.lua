@@ -2,7 +2,7 @@ workspace "CudaRaytracer"
 	architecture "x64"
 	startproject "CudaRaytracer"
 	
-	configurations{
+	configurations {
 		"Debug",
 		"Release"
 	}
@@ -11,9 +11,7 @@ workspace "CudaRaytracer"
 		"MultiprocessorCompile"
 	}
 
-	buildcustomizations {
-		"BuildCustomizations\\CUDA 10.2"
-	}
+	
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
@@ -26,6 +24,10 @@ project "CudaRaytracer"
 
 	targetdir ("bin/" ..outputdir.. "/%{prj.name}")
 	objdir("bin-int/" ..outputdir.. "/%{prj.name}")
+
+	buildcustomizations {
+		"BuildCustomizations\\CUDA 10.2"
+	}
 
 	files {
 		"%{prj.name}/src/**.h",
