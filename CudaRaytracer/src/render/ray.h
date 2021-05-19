@@ -5,7 +5,7 @@
 class Ray
 {
 public:
-	__device__ Ray() = default;
+	__device__ Ray() {}
 	__device__ Ray(const vec3& origin, const vec3& direction)
 		:m_Origin(origin), m_Direction(UnitVector(direction)) {}
 

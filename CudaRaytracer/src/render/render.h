@@ -4,8 +4,8 @@
 #include <curand_kernel.h>
 
 #include "utils/vec3.h"
-#include "render/hittable.h"
-#include "render/camera.h"
+#include "hittable.h"
+#include "camera.h"
 
 
 __device__ vec3 RayColor(const Ray& ray, Hittable** hittable, curandState* localRandState, const int32_t depth = 50);

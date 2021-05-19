@@ -4,10 +4,10 @@
 
 #include <device_launch_parameters.h>
 
-#include "render/sphere.h"
-#include "render/hittableList.h"
-#include "utils/utils.h"
+#include "sphere.h"
+#include "hittableList.h"
 #include "materials.h"
+#include "utils/utils.h"
 
 
 __global__ void RenderInit(curandState* randState, const int32_t width, const int32_t height)
@@ -57,15 +57,15 @@ __global__ void Render(cudaSurfaceObject_t surfaceObj, Hittable** world, Camera*
 __device__ vec3 RayColor(const Ray& ray, Hittable** world, curandState* localRandState, const int32_t depth)
 {
 	Ray curRay = ray;
-	HitRecords rec;
 	vec3 curAttenuation(1.0f, 1.0f, 1.0f);
 	for (int i = 0; i < depth; i++)
 	{
-		Ray scatteredRay;
-		vec3 attenuation;
+		HitRecords rec;
 		if ((*world)->Hit(curRay, 0.001f, inf, rec))
 		{
-			if (rec.Material->Scattered(curRay, rec, attenuation, scatteredRay, localRandState))
+			Ray scatteredRay;
+			vec3 attenuation;
+			if (rec.Material->Scatter(curRay, rec, attenuation, scatteredRay, localRandState))
 			{
 				curAttenuation *= attenuation;
 				curRay = scatteredRay;
@@ -75,7 +75,7 @@ __device__ vec3 RayColor(const Ray& ray, Hittable** world, curandState* localRan
 		}
 		else
 		{
-			float t  = 0.5f * (ray.GetDirection().y() + 1.0f); // Mapping y in the range [0, 1]
+			float t  = 0.5f * (curRay.GetDirection().y() + 1.0f); // Mapping y in the range [0, 1]
 			// Blend the background from blue to white vertically
 			vec3 c = (1.0f - t) * vec3(1.0f, 1.0f, 1.0f) + t * vec3(0.5f, 0.7f, 1.0f);
 			return curAttenuation * c;
@@ -89,20 +89,20 @@ __global__ void CreateWorld(Camera** cam, Hittable** list, Hittable** world, con
 {
 	if (threadIdx.x == 0 && blockIdx.x == 0)
 	{
-		list[0] = new Sphere(vec3( 0.0f,    0.0f, -1.0f),   0.5f, new Lambertian(vec3(rgb(242, 200, 202))));
-		list[1] = new Sphere(vec3( 1.0f,    0.0f, -1.0f),   0.5f, new Lambertian(vec3(rgb( 67,  67,  67))));
-		list[2] = new Sphere(vec3(-1.0f,    0.0f, -1.0f),   0.5f, new Lambertian(vec3(rgb( 50,  72,  93))));
-		list[3] = new Sphere(vec3( 0.0f, -100.5f, -1.0f), 100.0f, new Lambertian(vec3(rgb(191, 201, 141))));
+		list[0] = new Sphere(vec3( 0.0f, -100.5f, -1.0f), 100.0f, new Lambertian(vec3(rgb(142, 149, 105))));
+		list[1] = new Sphere(vec3( 0.0f,    0.0f, -1.0f),   0.5f, new Lambertian(vec3(rgb(214, 181, 182))));
+		list[2] = new Sphere(vec3(-1.0f,    0.0f, -1.0f),   0.5f, new Metal(vec3(rgb(50, 72, 93)), 0.05f));
+		list[3] = new Sphere(vec3( 1.0f,    0.0f, -1.0f),   0.5f, new Dielectric(1.5f));
 		*world  = new HittableList(list, numObj);
 		// camera settings
-		vec3 lookFrom(3.0f, 3.0f, 2.0f);
-		vec3 lookAt(0.0f, 0.0f, -1.0f);
-		vec3 vUp(0.0f, 1.0f, 0.0f);
+		vec3  lookFrom  = vec3( 3.5f,  3.5f,  3.5f);
+		vec3  lookAt    = vec3( 0.0f,  0.0f, -1.0f);
+		vec3  vUp       = vec3( 0.0f,  1.0f,  0.0f);
 		float focusDist = (lookFrom - lookAt).Length();
-		float aperture  = 2.0f;
-		float vFov = 30.0f;
+		float aperture  = 0.44f;
+		float vFov      = 20.0f;
 
-		*cam    = new Camera(lookFrom, lookAt, vUp, focusDist, aperture, vFov, aspectRatio);
+		*cam = new Camera(lookFrom, lookAt, vUp, focusDist, aperture, vFov, aspectRatio);
 	}
 }
 
