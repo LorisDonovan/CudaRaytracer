@@ -11,6 +11,10 @@ workspace "CudaRaytracer"
 		"MultiprocessorCompile"
 	}
 
+	buildcustomizations {
+		"BuildCustomizations\\CUDA 10.2"
+	}
+
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 project "CudaRaytracer"
