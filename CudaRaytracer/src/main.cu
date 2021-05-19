@@ -7,8 +7,9 @@
 #include <curand_kernel.h>
 #include <device_launch_parameters.h>
 
-#include "opengl/windowInit.h"
-#include "opengl/screen.h"
+#include "core/cudaInit.h"
+#include "core/windowInit.h"
+#include "core/screen.h"
 
 #include "render/ray.h"
 #include "render/hittable.h"
@@ -19,13 +20,12 @@
 
 #include "utils/vec3.h"
 #include "utils/timer.h"
-#include "utils/utils.h"
 
 
 // ----------Settings--------------------------------------
-constexpr int32_t numThreadsX = 32;
-constexpr int32_t numThreadsY = 32;
-constexpr int32_t numSamples  = 256;
+constexpr int32_t numThreadsX = 16;
+constexpr int32_t numThreadsY = 16;
+constexpr int32_t numSamples  = 1024;
 // Window settings
 constexpr float aspectRatio = 16.0f / 9.0f;
 constexpr uint32_t height   = 540;
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
 	
 	// Initialize random numbers for Rendering
 	curandState* d_RandState;
-	{
+	{	
 		std::cout << "RenderInit: ";
 		Timer t;
 		cudaCheckErrors(cudaMalloc((void**)&d_RandState, width * height * sizeof(curandState)));
@@ -119,6 +119,7 @@ int main(int argc, char** argv)
 	cudaCheckErrors(cudaFree(d_List));
 	cudaCheckErrors(cudaFree(d_World));
 	cudaCheckErrors(cudaFree(d_Cam));
+	cudaCheckErrors(cudaFree(d_RandState));
 	Cleanup(quadVA, quadVB, textureID, shaderID);
 	glfwTerminate();
 	return 0;

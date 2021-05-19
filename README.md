@@ -14,16 +14,19 @@ For Windows
 
 ## Set up
 * Run ```WinGenerateProjectFiles.bat``` file
-* In Visual Studio, 
-	* set Project>Build Dependencies>Build Configuration to CUDA
+* In Visual Studio,
 	* in Project properties>CUDA C/C++>Common
 		* set ```Generate Relocatable Device Code``` to ```yes```
 		* set ```Target Machine Platform``` to ```x64```
+	* you might also have to exclude all .cu files and include them again and refresh the solution explorer (because vs2019 starts to compile with MSVC instead of NVCC initially)
 * Then build and run the project
 
 # Output:
 This project was built and run on Intel i5-9300H cpu and Nvidia GTX 1050 gpu.\
 Screenshots during development:
+
+Positionable Camera with Defocus Blur (showing Metal, Diffuse, and Dielectric material) also showing console output (Render samples = 1024, apperture = 0.44, vFOV = 20)\
+![](img/metalDiffGlassMat.png)
 
 Positionable Camera with Defocus Blur (Only diffuse materials) (Render samples = 256, apperture = 2.0, vFOV = 30)\
 ![](img/positionableCamWithDefocusBlur.png)
@@ -44,7 +47,7 @@ Gradient Sky\
 ![](img/gradientSky.png)
 
 # ToDo:
-- [ ] Ray Tracing in One Weekend 
+- [x] Ray Tracing in One Weekend 
 - [ ] Ray Tracing: The Next Week
 - [ ] Ray Tracing: The Rest of Your Life
 - [ ] keyboard and mouse support (make it interactive)
