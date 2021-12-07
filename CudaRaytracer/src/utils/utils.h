@@ -14,14 +14,14 @@ __device__ static const float inf = std::numeric_limits<float>::infinity();
 __device__ static const float pi  = 3.1415926535897932385f;
 
 
-inline void CheckCuda(cudaError_t result, const char* func, const char* filepath, const uint32_t line)
+inline void CheckCuda(cudaError_t result, const char* func, const char* file, const int32_t line)
 {
 	if (result)
 	{
-		std::cerr << "CUDA::ERROR:" << static_cast<uint32_t>(result) << " in file: \"" << filepath
-			<< "\": line " << line << " - '" << func << "'" << std::endl;
-		cudaDeviceReset();
-		__debugbreak();
+		printf("CUDA::ERROR_CODE::%d in function:'%s' file: '%s' line: %d\nERROR_DESCRIPTION:: %s\n",
+			result, func, file, line, cudaGetErrorString(result));
+		char ch = getchar();
+		exit(-1);
 	}
 }
 

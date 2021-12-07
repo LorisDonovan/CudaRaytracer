@@ -1,5 +1,8 @@
 #pragma once
 
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
 #include <cuda_runtime.h>
 #include <curand_kernel.h>
 
@@ -22,5 +25,5 @@ private:
 	vec3 m_LowerLeft; // lower left corner
 
 	float m_LensRadius;
-	vec3 m_W, m_U, m_V;
+	vec3 m_FrontVec, m_RightVec, m_UpVec;
 };

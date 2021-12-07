@@ -11,24 +11,20 @@
 #include "core/windowInit.h"
 #include "core/screen.h"
 
-#include "render/ray.h"
 #include "render/hittable.h"
-#include "render/hittableList.h"
-#include "render/sphere.h"
 #include "render/camera.h"
 #include "render/render.h"
 
-#include "utils/vec3.h"
 #include "utils/timer.h"
 
 
 // ----------Settings--------------------------------------
 constexpr int32_t numThreadsX = 16;
 constexpr int32_t numThreadsY = 16;
-constexpr int32_t numSamples  = 1024;
+constexpr int32_t numSamples  = 32;
 // Window settings
 constexpr float aspectRatio = 16.0f / 9.0f;
-constexpr uint32_t height   = 512;
+constexpr uint32_t height   = 270;
 constexpr uint32_t width    = static_cast<uint32_t>(height * aspectRatio);
 
 
@@ -62,16 +58,17 @@ int main(int argc, char** argv)
 	cudaCheckErrors(cudaMalloc((void**)&d_World, sizeof(Hittable*)));
 	CreateWorld<<<1, 1>>>(d_Cam, d_List, d_World, aspectRatio, numObj);
 	cudaCheckErrors(cudaGetLastError());
-	cudaCheckErrors(cudaDeviceSynchronize());
+	//cudaCheckErrors(cudaDeviceSynchronize());
 
 	// CUDA kernel thread layout
 	dim3 blocks((width + numThreadsX - 1) / numThreadsX, (height + numThreadsY - 1) / numThreadsY);
 	dim3 threads(numThreadsX, numThreadsY);
 
 	std::cout << "Rendering info:\n"
-			  << "    Image Resolution: " << width       << "x" << height      << "\n"
-			  << "    Thread dimension: " << numThreadsX << "x" << numThreadsY << "\n"
-			  << "    Render samples  : " << numSamples  << std::endl;
+			  << "    Image Resolution: " << width      << "x" << height    << "\n"
+			  << "    Thread dimension: " << threads.x  << "x" << threads.y << "\n"
+			  << "    Block dimension : " << blocks.x   << "x" << blocks.y  << "\n"
+			  << "    Render samples  : " << numSamples << std::endl;
 	
 	// Initialize random numbers for Rendering
 	curandState* d_RandState;
@@ -81,7 +78,7 @@ int main(int argc, char** argv)
 		cudaCheckErrors(cudaMalloc((void**)&d_RandState, width * height * sizeof(curandState)));
 		RenderInit<<<blocks, threads>>>(d_RandState, width, height);
 		cudaCheckErrors(cudaGetLastError());
-		cudaCheckErrors(cudaDeviceSynchronize());
+		//cudaCheckErrors(cudaDeviceSynchronize());
 	}
 	// Call Render function
 	{
@@ -95,7 +92,7 @@ int main(int argc, char** argv)
 		Render<<<blocks, threads>>>(surfaceObj, d_World, d_Cam, d_RandState, width, height, numSamples);
 		cudaCheckErrors(cudaGraphicsUnmapResources(1, &textureResource)); // sync cuda operations before graphics calls
 		cudaCheckErrors(cudaGetLastError());
-		cudaCheckErrors(cudaDeviceSynchronize());
+		//cudaCheckErrors(cudaDeviceSynchronize());
 	}
 
 	while (!glfwWindowShouldClose(window))

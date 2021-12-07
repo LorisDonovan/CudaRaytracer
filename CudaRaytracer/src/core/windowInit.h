@@ -20,23 +20,28 @@ GLFWwindow* InitWindow(uint32_t width, uint32_t height)
 	{
 		std::cerr << "ERROR: Failed to create GLFW window" << std::endl;
 		glfwTerminate();
+		char ch = getchar();
 		exit(-1);
 	}
 
 	// Make the window's context current
 	glfwMakeContextCurrent(window);
+	//glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
+	//glfwSetCursorPosCallback(window, mouse_callback);
+	//glfwSetScrollCallback(window, scroll_callback);
 
 	// Initialize glad
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
 		std::cerr << "ERROR: Failed to initialize GLAD" << std::endl;
+		char ch = getchar();
 		exit(-1);
 	}
 
 	std::cout << "OpenGL info:\n";
-	std::cout << "    Vendor  : " << glGetString(GL_VENDOR) << "\n";
+	std::cout << "    Vendor  : " << glGetString(GL_VENDOR)   << "\n";
 	std::cout << "    Renderer: " << glGetString(GL_RENDERER) << "\n";
-	std::cout << "    Version : " << glGetString(GL_VERSION) << std::endl;
+	std::cout << "    Version : " << glGetString(GL_VERSION)  << std::endl;
 
 	return window;
 }
