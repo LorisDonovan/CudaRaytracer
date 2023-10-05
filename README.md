@@ -31,7 +31,7 @@ cmake --build build --config Release
 * Run the project
 ```
 .\build\Release\CudaRaytracer.exe
-``
+```
 
 # Output:
 This project was built and run on Intel i5-9300H cpu and Nvidia GTX 1050 gpu.\
