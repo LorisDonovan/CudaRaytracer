@@ -353,6 +353,7 @@ MigrationBackup/
 # Binaries
 **/bin/
 bin-int/
+build/
 
 *.log
 

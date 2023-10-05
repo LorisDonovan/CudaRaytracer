@@ -1,7 +1,7 @@
 workspace "CudaRaytracer"
 	architecture "x64"
 	startproject "CudaRaytracer"
-	
+
 	configurations {
 		"Debug",
 		"Release"
@@ -11,7 +11,7 @@ workspace "CudaRaytracer"
 		"MultiprocessorCompile"
 	}
 
-	
+
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
@@ -33,7 +33,8 @@ project "CudaRaytracer"
 		"%{prj.name}/src/**.h",
 		"%{prj.name}/src/**.c",
 		"%{prj.name}/src/**.cu",
-		"%{prj.name}/src/**.cpp"
+		"%{prj.name}/src/**.cpp",
+		"ext/glad/glad.c"
 	}
 
 	includedirs {
@@ -64,4 +65,3 @@ project "CudaRaytracer"
 		filter "configurations:Release"
 			runtime "Release"
 			optimize "on"
-

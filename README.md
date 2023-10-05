@@ -6,11 +6,12 @@
 * [Ray Tracing in One Weekend](https://raytracing.github.io/books/RayTracingInOneWeekend.html)
 
 # Getting Started
-For Windows 
+For Windows
 ## Prerequisites
 * Visual studio 2019
 * CUDA compatible GPU with compute capability >= 3.0
 * [CUDA Toolkit v10.2](https://developer.nvidia.com/cuda-10.2-download-archive) or higher
+* [CMake](https://cmake.org/download/)
 
 ## Set up
 * Run ```WinGenerateProjectFiles.bat``` file
@@ -20,6 +21,17 @@ For Windows
 		* set ```Target Machine Platform``` to ```64-bit```
 	* you might also have to exclude all .cu files and include them again and refresh the solution explorer (because vs2019 starts to compile with MSVC instead of NVCC initially)
 * Then build and run the project
+
+## Alternative Using CMake
+* Configure and build the project (this builds the project in Release mode)
+```
+cmake -S . -B build
+cmake --build build --config Release
+```
+* Run the project
+```
+.\build\Release\CudaRaytracer.exe
+``
 
 # Output:
 This project was built and run on Intel i5-9300H cpu and Nvidia GTX 1050 gpu.\
@@ -47,7 +59,7 @@ Gradient Sky\
 ![](img/gradientSky.png)
 
 # ToDo:
-- [x] Ray Tracing in One Weekend 
+- [x] Ray Tracing in One Weekend
 - [ ] Ray Tracing: The Next Week
 - [ ] Ray Tracing: The Rest of Your Life
 - [ ] keyboard and mouse support (make it interactive)

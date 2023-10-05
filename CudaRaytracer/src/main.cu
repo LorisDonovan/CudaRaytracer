@@ -24,7 +24,7 @@ constexpr int32_t numThreadsY = 16;
 constexpr int32_t numSamples  = 32;
 // Window settings
 constexpr float aspectRatio = 16.0f / 9.0f;
-constexpr uint32_t height   = 270;
+constexpr uint32_t height   = 720;
 constexpr uint32_t width    = static_cast<uint32_t>(height * aspectRatio);
 
 
@@ -47,7 +47,7 @@ int main(int argc, char** argv)
 	// Initialize texture
 	uint32_t textureID = InitGLTexture(width, height);
 	InitCudaTexture(textureResource, resourceDesc, textureID);
-	
+
 	// Create Scene objects
 	const int32_t numObj = 4;
 	Camera** d_Cam;
@@ -69,10 +69,10 @@ int main(int argc, char** argv)
 			  << "    Thread dimension: " << threads.x  << "x" << threads.y << "\n"
 			  << "    Block dimension : " << blocks.x   << "x" << blocks.y  << "\n"
 			  << "    Render samples  : " << numSamples << std::endl;
-	
+
 	// Initialize random numbers for Rendering
 	curandState* d_RandState;
-	{	
+	{
 		std::cout << "RenderInit: ";
 		Timer t;
 		cudaCheckErrors(cudaMalloc((void**)&d_RandState, width * height * sizeof(curandState)));
