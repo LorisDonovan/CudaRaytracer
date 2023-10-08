@@ -8,12 +8,14 @@
 # Getting Started
 For Windows
 ## Prerequisites
-* Visual studio 2019
+* [Visual studio](https://visualstudio.microsoft.com/vs/community/) 2019 or higher
 * CUDA compatible GPU with compute capability >= 3.0
 * [CUDA Toolkit v10.2](https://developer.nvidia.com/cuda-10.2-download-archive) or higher
 * [CMake](https://cmake.org/download/)
+* [GLFW binaries for your platform](https://www.glfw.org/)
 
 ## Set up using Premake
+* Replace binaries in `ext/glfw/lib/` with the binaries for your platform
 * Run ```WinGenerateProjectFiles.bat``` file
 * In Visual Studio,
 	* in Project properties>CUDA C/C++>Common
@@ -23,6 +25,7 @@ For Windows
 * Then build and run the project
 
 ## Alternative set up using CMake (RECOMMENDED)
+* Replace binaries in `ext/glfw/lib/` with the binaries for your platform
 * Configure and build the project (this builds the project in Release mode)
 ```
 cmake -S . -B build
