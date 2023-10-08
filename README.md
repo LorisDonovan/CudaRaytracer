@@ -30,7 +30,7 @@ cmake --build build --config Release
 ```
 
 ## Run
-* You can optionally specify the number of samples and/or the height of the window as commandline arguments
+* You can optionally specify the number of samples and/or the height of the window as commandline arguments. (The implementation of commandline arguments is pretty basic, it will break if you don't provide an unsigned int of a reasonable size)
 ```
 .\build\Release\CudaRaytracer.exe
 // OR
