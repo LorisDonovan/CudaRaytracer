@@ -22,7 +22,7 @@ For Windows
 	* you might also have to exclude all .cu files and include them again and refresh the solution explorer (because vs2019 starts to compile with MSVC instead of NVCC initially)
 * Then build and run the project
 
-## Alternative set up using CMake
+## Alternative set up using CMake (RECOMMENDED)
 * Configure and build the project (this builds the project in Release mode)
 ```
 cmake -S . -B build
