@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.24)
 
-set(CMAKE_CXX_STANDARD 17)
 project(CudaRaytracer LANGUAGES CXX CUDA)
 
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_ARCHITECTURES 60) # set the card's architecture level (compute capability)
 
 # set Visual Studio startup project
@@ -19,6 +19,7 @@ add_executable(
 add_subdirectory("ext/glad")
 
 find_package(OpenGL REQUIRED)
+find_package(CUDAToolkit REQUIRED)
 
 # We need to explicitly state that we need all CUDA files in the
 # particle library to be built with -dc as the member functions
@@ -28,10 +29,11 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 target_include_directories(
 	${PROJECT_NAME}
 	PUBLIC
-	"CudaRaytracer/src/"
-	"ext/"
-	"ext/glad/include/"
-	"ext/glfw/include/"
+	"${CUDAToolkit_INCLUDE_DIRS}"
+	"${PROJECT_SOURCE_DIR}/CudaRaytracer/src/"
+	"${PROJECT_SOURCE_DIR}/ext/"
+	"${PROJECT_SOURCE_DIR}/ext/glad/include/"
+	"${PROJECT_SOURCE_DIR}/ext/glfw/include/"
 )
 
 target_link_libraries(
@@ -39,7 +41,7 @@ target_link_libraries(
 	"cudart_static.lib"
 	"cublas.lib"
 	"curand.lib"
-	${OPENGL_gl_LIBRARY}
+	"${OPENGL_gl_LIBRARY}"
 	"${PROJECT_SOURCE_DIR}/ext/glfw/lib/glfw3.lib"
 	glad
 )

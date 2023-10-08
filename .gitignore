@@ -354,6 +354,7 @@ MigrationBackup/
 **/bin/
 bin-int/
 build/
+out/
 
 *.log
 

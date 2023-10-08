@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -47,6 +48,7 @@ int main(int argc, char** argv)
 	cudaSurfaceObject_t    surfaceObj = 0;
 
 	// Initialize opengl and cuda interop
+
 	GLFWwindow* window = InitWindow(width, height);
 	int32_t cudaDevID  = InitCudaDevice();
 
