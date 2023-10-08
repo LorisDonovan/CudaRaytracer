@@ -13,7 +13,7 @@ For Windows
 * [CUDA Toolkit v10.2](https://developer.nvidia.com/cuda-10.2-download-archive) or higher
 * [CMake](https://cmake.org/download/)
 
-## Set up
+## Set up using Premake
 * Run ```WinGenerateProjectFiles.bat``` file
 * In Visual Studio,
 	* in Project properties>CUDA C/C++>Common
@@ -22,15 +22,21 @@ For Windows
 	* you might also have to exclude all .cu files and include them again and refresh the solution explorer (because vs2019 starts to compile with MSVC instead of NVCC initially)
 * Then build and run the project
 
-## Alternative Using CMake
+## Alternative set up using CMake
 * Configure and build the project (this builds the project in Release mode)
 ```
 cmake -S . -B build
 cmake --build build --config Release
 ```
-* Run the project
+
+## Run
+* You can optionally specify the number of samples and/or the height of the window as commandline arguments
 ```
 .\build\Release\CudaRaytracer.exe
+// OR
+.\build\Release\CudaRaytracer.exe 512
+// OR
+.\build\Release\CudaRaytracer.exe 512 1080
 ```
 
 # Output:

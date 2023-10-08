@@ -19,17 +19,27 @@
 
 
 // ----------Settings--------------------------------------
-constexpr int32_t numThreadsX = 16;
-constexpr int32_t numThreadsY = 16;
-constexpr int32_t numSamples  = 32;
+constexpr uint32_t numThreadsX = 16;
+constexpr uint32_t numThreadsY = 16;
+uint32_t numSamples  = 32;
 // Window settings
 constexpr float aspectRatio = 16.0f / 9.0f;
-constexpr uint32_t height   = 720;
-constexpr uint32_t width    = static_cast<uint32_t>(height * aspectRatio);
+uint32_t height   = 720;
+uint32_t width    = static_cast<uint32_t>(height * aspectRatio);
 
 
 int main(int argc, char** argv)
 {
+	// yeah I know this can break, so don't do anything that will break it
+	if (argc == 2)
+		numSamples = std::stoi(argv[1]);
+	else if (argc == 3)
+	{
+		numSamples = std::stoi(argv[1]);
+		height = std::stoi(argv[2]);
+		width = static_cast<uint32_t>(height * aspectRatio);
+	}
+
 	// CUDA resources
 	cudaResourceDesc       resourceDesc;
 	cudaGraphicsResource_t textureResource;
@@ -78,7 +88,7 @@ int main(int argc, char** argv)
 		cudaCheckErrors(cudaMalloc((void**)&d_RandState, width * height * sizeof(curandState)));
 		RenderInit<<<blocks, threads>>>(d_RandState, width, height);
 		cudaCheckErrors(cudaGetLastError());
-		//cudaCheckErrors(cudaDeviceSynchronize());
+		cudaCheckErrors(cudaDeviceSynchronize()); // comment if you don't want to time RenderInit()
 	}
 	// Call Render function
 	{
@@ -92,7 +102,7 @@ int main(int argc, char** argv)
 		Render<<<blocks, threads>>>(surfaceObj, d_World, d_Cam, d_RandState, width, height, numSamples);
 		cudaCheckErrors(cudaGraphicsUnmapResources(1, &textureResource)); // sync cuda operations before graphics calls
 		cudaCheckErrors(cudaGetLastError());
-		//cudaCheckErrors(cudaDeviceSynchronize());
+		cudaCheckErrors(cudaDeviceSynchronize()); // comment if you don't want to time Render()
 	}
 
 	while (!glfwWindowShouldClose(window))

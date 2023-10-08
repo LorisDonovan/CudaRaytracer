@@ -1,6 +1,6 @@
 #include "render.h"
 
-#include <cstdlib>
+#include <cstdint>
 
 #include <device_launch_parameters.h>
 
